@@ -1,0 +1,19 @@
+{
+  "name": "dach-company-data-extractor",
+  "version": "0.1.0",
+  "description": "Extract structured company data (Impressum / legal notice) from German, Austrian and Swiss websites, with optional EU VIES VAT-ID validation.",
+  "type": "module",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "node src/main.js",
+    "test": "node --test test/",
+    "smoke": "node test/smoke-live.js"
+  },
+  "dependencies": {
+    "apify": "^3.4.0",
+    "crawlee": "^3.13.0",
+    "cheerio": "^1.0.0"
+  },
+  "license": "MIT",
+  "private": true
+}
