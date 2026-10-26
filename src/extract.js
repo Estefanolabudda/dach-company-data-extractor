@@ -55,6 +55,7 @@ function cleanName(line) {
 
 function splitPeople(s) {
   return s
+    .replace(/^(?:Geschäftsführer(?:in|innen|\/in)?|Geschäftsführung|Inhaber(?:in)?|Vorstand|Verwaltungsrat|Gesellschafter)\s*:\s*/i, '')
     .replace(/\(.*?\)/g, ' ')
     .split(/\s*(?:,|;|\/|\bund\b|\bu\.\b|&|\bsowie\b)\s*/i)
     .map((p) => p.replace(/^(?:Herr|Frau|Hr\.|Fr\.|Dipl\.-?\w+\.?|Dr\.|Prof\.|Mag\.|Ing\.)\s+/g, '').trim())
