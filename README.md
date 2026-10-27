@@ -28,12 +28,14 @@ Every DACH company website must publish these facts in its *Impressum* (§ 5 DDG
 - **VIES validation included.** DE/AT VAT IDs are checked against the official EU service and enriched with the registered name and address where the member state returns it. (Swiss UIDs are not in VIES.)
 - **Agent-ready.** Works through the Apify MCP server, so an AI agent can call `dach-company-data-extractor` as a tool to look up a company before writing an offer, a contract or a due-diligence memo.
 
-## Typical uses
+## Typical uses (Impressum scraper / imprint extractor / German company data API)
 
 - Enrich a lead list of domains with legal entity, register number and VAT ID before importing into HubSpot, Pipedrive or Salesforce.
 - Supplier / customer onboarding (KYB): confirm that the entity on the website matches the entity on the invoice.
 - Verify Impressum completeness across your own portfolio of sites or client sites (agencies).
 - Build a DACH company dataset from a list of websites.
+- Replace manual Impressum lookups: works as an Impressum scraper, imprint extractor, Handelsregister-number finder and VAT-ID (VIES) checker in one run, for Germany (DE), Austria (AT) and Switzerland (CH).
+- Call it from an AI agent via the Apify MCP server when a workflow needs the legal entity behind a website (offers, contracts, due diligence).
 
 ## Input
 
