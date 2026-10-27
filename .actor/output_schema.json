@@ -1,0 +1,13 @@
+{
+  "actorOutputSchemaVersion": 1,
+  "title": "DACH company records",
+  "description": "One structured company record per input domain, extracted from the website's legal notice (Impressum) and optionally validated against EU VIES.",
+  "properties": {
+    "companyRecords": {
+      "type": "string",
+      "title": "Company records",
+      "description": "Dataset with one item per domain: company name, legal form, address, register data, VAT ID with VIES result, representatives, contact data, confidence and provenance.",
+      "template": "{{links.apiDefaultDatasetUrl}}/items"
+    }
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "actorSpecification": 1,
+  "title": "Company records",
+  "fields": {
+    "type": "object",
+    "properties": {
+      "inputUrl": { "type": "string", "title": "Input URL", "description": "The URL given as input.", "example": "https://www.sevdesk.de/" },
+      "domain": { "type": "string", "title": "Domain", "description": "Registered domain of the input URL (without www).", "example": "sevdesk.de" },
+      "impressumUrl": { "type": ["string", "null"], "title": "Source page", "description": "URL of the legal-notice page the data was extracted from.", "example": "https://sevdesk.de/impressum/" },
+      "fetchedVia": { "type": ["string", "null"], "title": "Fetched via", "description": "'http' for plain HTTP fetch, 'browser' when the headless-browser fallback was used.", "enum": ["http", "browser", null] },
+      "companyName": { "type": ["string", "null"], "title": "Company name", "description": "Legal name of the company as published in the Impressum.", "example": "sevDesk GmbH" },
+      "legalForm": { "type": ["string", "null"], "title": "Legal form", "description": "Detected legal form (GmbH, AG, GmbH & Co. KG, e.K., KdöR, ...).", "example": "GmbH" },
+      "street": { "type": ["string", "null"], "title": "Street", "example": "Im Unteren Angel 1" },
+      "postalCode": { "type": ["string", "null"], "title": "Postal code", "example": "77652" },
+      "city": { "type": ["string", "null"], "title": "City", "example": "Offenburg" },
+      "country": { "type": ["string", "null"], "title": "Country", "description": "ISO 3166-1 alpha-2 inferred from VAT ID, postal format, text or TLD.", "enum": ["DE", "AT", "CH", "LI", null] },
+      "registerCourt": { "type": ["string", "null"], "title": "Register court", "example": "Amtsgericht Freiburg" },
+      "registerType": { "type": ["string", "null"], "title": "Register type", "description": "HRB/HRA/GnR/VR/PR (DE), FN (AT), CH (Swiss UID register).", "example": "HRB" },
+      "registerNumber": { "type": ["string", "null"], "title": "Register number", "example": "710506" },
+      "vatId": { "type": ["string", "null"], "title": "VAT ID", "description": "Normalised VAT identification number (DE..., ATU..., CHE-...).", "example": "DE291779897" },
+      "taxNumber": { "type": ["string", "null"], "title": "Tax number", "description": "German Steuernummer when published (typical for sole traders).", "example": "231/123/45678" },
+      "representatives": { "type": "array", "title": "Representatives", "description": "Managing directors, board members, owners as published.", "items": { "type": "string" }, "example": ["Rico Andersen"] },
+      "responsiblePerson": { "type": ["string", "null"], "title": "Responsible for content", "description": "Person named under § 18 MStV / § 55 RStV." },
+      "email": { "type": ["string", "null"], "title": "E-mail", "example": "support@sevdesk.com" },
+      "phone": { "type": ["string", "null"], "title": "Phone", "example": "+49-781-125508-10" },
+      "fax": { "type": ["string", "null"], "title": "Fax" },
+      "supervisoryAuthority": { "type": ["string", "null"], "title": "Supervisory authority" },
+      "profession": { "type": ["string", "null"], "title": "Profession", "description": "Regulated profession title if published." },
+      "chamber": { "type": ["string", "null"], "title": "Chamber", "description": "Professional chamber if published." },
+      "vies": { "type": ["object", "null"], "title": "VIES check", "description": "Result of the EU VIES validation: checked, valid, name, address, requestDate, or reason when not checked.", "example": { "checked": true, "valid": true, "name": "---", "address": "---", "requestDate": "2026-10-27" } },
+      "confidence": { "type": "number", "title": "Confidence", "description": "0–1: share of core blocks found (name, full address, official identifier, contact). Records with confidence >= 0.25 are charged.", "example": 1 },
+      "fieldsFound": { "type": "array", "title": "Fields found", "items": { "type": "string" } },
+      "candidatesTried": { "type": "array", "title": "Pages tried", "description": "Legal-notice candidate URLs that were fetched.", "items": { "type": "string" } },
+      "errors": { "type": "array", "title": "Errors", "description": "Non-fatal problems, e.g. blocked requests or missing Impressum link.", "items": { "type": "string" } },
+      "extractedAt": { "type": "string", "title": "Extracted at", "description": "ISO 8601 timestamp." }
+    },
+    "required": ["inputUrl", "domain", "confidence", "extractedAt"]
+  },
+  "views": {
+    "overview": {
+      "title": "Overview",
+      "description": "One row per domain with the most important fields.",
+      "transformation": { "fields": ["domain", "companyName", "legalForm", "street", "postalCode", "city", "country", "registerType", "registerNumber", "registerCourt", "vatId", "email", "phone", "representatives", "confidence", "fetchedVia", "impressumUrl"] },
+      "display": {
+        "component": "table",
+        "properties": {
+          "domain": { "label": "Domain", "format": "text" },
+          "companyName": { "label": "Company", "format": "text" },
+          "legalForm": { "label": "Legal form", "format": "text" },
+          "street": { "label": "Street", "format": "text" },
+          "postalCode": { "label": "ZIP", "format": "text" },
+          "city": { "label": "City", "format": "text" },
+          "country": { "label": "Country", "format": "text" },
+          "registerType": { "label": "Reg. type", "format": "text" },
+          "registerNumber": { "label": "Reg. no.", "format": "text" },
+          "registerCourt": { "label": "Register court", "format": "text" },
+          "vatId": { "label": "VAT ID", "format": "text" },
+          "email": { "label": "E-mail", "format": "text" },
+          "phone": { "label": "Phone", "format": "text" },
+          "representatives": { "label": "Representatives", "format": "array" },
+          "confidence": { "label": "Confidence", "format": "number" },
+          "fetchedVia": { "label": "Via", "format": "text" },
+          "impressumUrl": { "label": "Source", "format": "link" }
+        }
+      }
+    },
+    "quality": {
+      "title": "Quality & errors",
+      "transformation": { "fields": ["domain", "confidence", "fieldsFound", "candidatesTried", "errors", "extractedAt"] },
+      "display": {
+        "component": "table",
+        "properties": {
+          "domain": { "label": "Domain", "format": "text" },
+          "confidence": { "label": "Confidence", "format": "number" },
+          "fieldsFound": { "label": "Fields found", "format": "array" },
+          "candidatesTried": { "label": "Pages tried", "format": "array" },
+          "errors": { "label": "Errors", "format": "array" },
+          "extractedAt": { "label": "Extracted at", "format": "date" }
+        }
+      }
+    }
+  }
+}

@@ -8,32 +8,7 @@
   "dockerfile": "../Dockerfile",
   "input": "./input_schema.json",
   "storages": {
-    "dataset": {
-      "actorSpecification": 1,
-      "title": "Company records",
-      "views": {
-        "overview": {
-          "title": "Overview",
-          "transformation": {
-            "fields": ["domain", "companyName", "legalForm", "street", "postalCode", "city", "country", "registerType", "registerNumber", "registerCourt", "vatId", "vies", "email", "phone", "representatives", "confidence", "impressumUrl", "errors"]
-          },
-          "display": {
-            "component": "table",
-            "properties": {
-              "domain": { "label": "Domain", "format": "text" },
-              "companyName": { "label": "Company", "format": "text" },
-              "legalForm": { "label": "Legal form", "format": "text" },
-              "city": { "label": "City", "format": "text" },
-              "country": { "label": "Country", "format": "text" },
-              "vatId": { "label": "VAT ID", "format": "text" },
-              "registerNumber": { "label": "Register no.", "format": "text" },
-              "email": { "label": "E-mail", "format": "text" },
-              "confidence": { "label": "Confidence", "format": "number" },
-              "impressumUrl": { "label": "Source", "format": "link" }
-            }
-          }
-        }
-      }
-    }
-  }
+    "dataset": "./dataset_schema.json"
+  },
+  "output": "./output_schema.json"
 }
