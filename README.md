@@ -1,5 +1,7 @@
 # DACH Company Data Extractor – Impressum → structured company record (+ VIES VAT check)
 
+**Run it on Apify (no setup, free tier included): https://apify.com/etse/dach-company-data-extractor** · Source: MIT-licensed, this repository.
+
 Give it a list of website URLs from Germany, Austria or Switzerland and get back **one clean, structured company record per domain**: legal name, legal form, street address, commercial-register court and number, VAT ID (validated live against the EU VIES service), managing directors / representatives, e-mail, phone and the URL the data was taken from.
 
 Every DACH company website must publish these facts in its *Impressum* (§ 5 DDG in Germany, § 5 ECG in Austria, UWG/Impressumspflicht in Switzerland). This Actor finds that page, reads it and turns the free text into fields you can load straight into a CRM, a KYC workflow or an LLM pipeline.
@@ -93,6 +95,17 @@ Pay per event: you are charged **only for records with `confidence >= 0.25`**, i
 ## Data protection
 
 The Actor only reads information that the website operator is legally obliged to publish. Names of managing directors are such mandatory disclosures. Under the Apify Store terms you (the user) are the controller of the data you collect and are responsible for having a lawful basis for the intended use (e.g. B2B contact, KYB). Do not use the output for unsolicited marketing where local law requires consent.
+
+## Run locally / contribute
+
+```bash
+npm install
+npm test                      # unit tests
+node test/smoke-quick.js      # 5 live sites over plain HTTP
+CHROME_PATH=/usr/bin/chromium node test/smoke-live.js   # 20-site benchmark incl. browser fallback
+```
+
+Issues and pull requests are welcome. The Actor is rebuilt automatically from `main`.
 
 ## Changelog
 
