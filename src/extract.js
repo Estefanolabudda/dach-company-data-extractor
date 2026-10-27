@@ -296,16 +296,20 @@ export function commonImpressumPaths(baseUrl) {
 export function pageToText($) {
   $('script, style, noscript, svg, nav, header, footer, iframe, form, button, [role="navigation"], [aria-hidden="true"], .cookie, #cookie, .cookie-banner, .cc-window').remove();
   // Prefer <main> or an element whose id/class mentions impressum/content
-  // 1) Smallest block that contains a register/VAT keyword – beats store locators, footers etc.
+  // 1) Block with the most "Impressum signals" (register/VAT keyword, postal address, legal form, e-mail, phone);
+  //    ties go to the smaller block. Beats store locators, footers and partial sub-blocks.
   const KEY = /Handelsregister|Registergericht|Firmenbuch|\bHR[AB]\b|USt-?\s?Id|Umsatzsteuer-?\s?Id|\bUID\b|Angaben gemäß|Informationspflicht/i;
+  const SIGNALS = [KEY, /\b\d{4,5}\s+[A-ZÄÖÜ][a-zäöüß]/, LEGAL_FORM_RE, /@|\(at\)|\[at\]/i, /\+\d{2}[\d\s()/-]{6,}|\bTel/i];
   let best = null;
+  let bestScore = 0;
   let bestLen = Infinity;
   $('main, article, section, div, td, address').each((_, el) => {
     const $el = $(el);
     const t = $el.text().replace(/\s+/g, ' ').trim();
-    if (t.length < 250 || t.length > 8000 || !KEY.test(t)) return;
-    if (!/\b\d{4,5}\s+[A-ZÄÖÜ][a-zäöüß]/.test(t)) return; // must also contain a postal address
-    if (t.length < bestLen) { best = $el; bestLen = t.length; }
+    if (t.length < 250 || t.length > 8000) return;
+    const score = SIGNALS.reduce((n, re) => n + (re.test(t) ? 1 : 0), 0);
+    if (score < 3 || !KEY.test(t)) return;
+    if (score > bestScore || (score === bestScore && t.length < bestLen)) { best = $el; bestScore = score; bestLen = t.length; }
   });
   const candidates = ['main', '[id*="impressum" i]', '[class*="impressum" i]', 'article', '#content', '.content', '#main', 'body'];
   for (const sel of candidates) {

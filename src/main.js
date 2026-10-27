@@ -142,7 +142,7 @@ if (browserTargets.length) {
   const launchOptions = process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {};
   const pwCrawler = new PlaywrightCrawler({
     proxyConfiguration: proxyConf,
-    maxConcurrency: Math.min(3, maxConcurrency),
+    maxConcurrency: Math.min(2, maxConcurrency),
     maxRequestRetries: 1,
     requestHandlerTimeoutSecs: 60,
     navigationTimeoutSecs: 40,
