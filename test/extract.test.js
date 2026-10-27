@@ -158,3 +158,33 @@ test('commonImpressumPaths builds origin-based urls', () => {
   const p = commonImpressumPaths('https://shop.example.at/some/page?x=1');
   assert.equal(p[0], 'https://shop.example.at/impressum');
 });
+
+test('Street line containing "ust" substring is not skipped (Industriestr.)', () => {
+  const r = extractCompanyData('Hetzner Online GmbH\nIndustriestr. 25\n91710 Gunzenhausen\nDeutschland\nTel.: +49 (0)9831 505-0');
+  assert.equal(r.street, 'Industriestr. 25');
+  assert.equal(r.phone, '+49 (0)9831 505-0');
+});
+
+test('Register number does not swallow first letter of next word', () => {
+  const r = extractCompanyData('Muster GmbH\nMusterweg 1\n12345 Musterstadt\nRegistergericht: Amtsgericht Freiburg\nRegisternummer: HRB710506\nUmsatzsteuer-Identifikationsnummer: DE291779897');
+  assert.equal(r.registerType, 'HRB');
+  assert.equal(r.registerNumber, '710506');
+  assert.equal(r.registerCourt, 'Amtsgericht Freiburg');
+  assert.equal(r.vatId, 'DE291779897');
+});
+
+test('Name phrase "ist ein Internetauftritt der" is stripped', () => {
+  const r = extractCompanyData('Impressum\nThalia.de ist ein Internetauftritt der Thalia Bücher GmbH\nAn den Speichern 8\n48157 Münster\nAmtsgericht Hagen, HRB 9698, Ust.-Id.: DE 813 334 399');
+  assert.equal(r.companyName, 'Thalia Bücher GmbH');
+  assert.equal(r.registerNumber, '9698');
+  assert.equal(r.vatId, 'DE813334399');
+});
+
+test('Public body (KdöR) and ", City" suffix', () => {
+  const r = extractCompanyData('IHK für München und Oberbayern\nKörperschaft des öffentlichen Rechts\nMax-Joseph-Straße 2\n80333 München\nUSt-IdNr.: DE129523912');
+  assert.equal(r.companyName, 'IHK für München und Oberbayern');
+  assert.equal(r.legalForm, 'KdöR');
+  const d = extractCompanyData('DATEV eG, Nürnberg\nVirnsberger Straße 63\n90431 Nürnberg\nUSt-IdNr.: DE133546770');
+  assert.equal(d.companyName, 'DATEV eG');
+  assert.equal(d.legalForm, 'eG');
+});

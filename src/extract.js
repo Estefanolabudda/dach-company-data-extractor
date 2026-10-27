@@ -8,7 +8,7 @@ const LEGAL_FORMS = [
   'UG (haftungsbeschränkt) & Co. KG', 'UG (haftungsbeschränkt)', 'gGmbH', 'gUG', 'GmbH', 'mbH',
   'KGaA', 'AG', 'SE', 'KG', 'OHG', 'e. K.', 'e.K.', 'e.Kfr.', 'e.Kfm.', 'e. V.', 'e.V.', 'GbR',
   'PartG mbB', 'PartGmbB', 'PartG', 'eG', 'Stiftung', 'AöR', 'KdöR', 'Ltd.', 'Ltd', 'Inc.', 'LLC',
-  'S.A.', 'SARL', 'Sàrl', 'B.V.', 'N.V.', 'Genossenschaft', 'Verein', 'OG', 'KEG', 'Einzelunternehmen',
+  'S.A.', 'SARL', 'Sàrl', 'B.V.', 'N.V.', 'Genossenschaft', 'Verein', 'OG', 'KEG', 'Einzelunternehmen', 'e.U.', 'e. U.', 'Einzelfirma', 'GesmbH', 'Ges.m.b.H.',
 ];
 
 const LEGAL_FORM_RE = new RegExp(
@@ -24,7 +24,7 @@ const VAT_RE = /\b(DE\s?\d{3}\s?\d{3}\s?\d{3}|ATU\s?\d{8}|CHE[-\s]?\d{3}[.\s]?\d
 const VAT_CONTEXT_RE = /(USt|Ust|VAT|Umsatzsteuer|UID|MwSt|MWST|Mehrwertsteuer|Steuer-?ID|Identifikationsnummer)/i;
 const TAX_NO_RE = /Steuer(?:-?\s?(?:nummer|nr\.?))\s*:?\s*(\d{2,3}\s?\/?\s?\d{3,4}\s?\/?\s?\d{4,5})/i;
 
-const REGISTER_TYPE_RE = /\b(HRA|HRB|GnR|VR|PR|FN|CHE|CH-\d{3}\.\d\.\d{3}\.\d{3}-\d)\b\s*:?\s*(\d{1,7}\s?[a-zA-Z]?)?/;
+const REGISTER_TYPE_RE = /\b(HRA|HRB|GnR|VR|PR|FN|CH-\d{3}\.\d\.\d{3}\.\d{3}-\d)(?![a-zA-Z])\s*\.?:?\s*(\d{1,7}(?:\s?[a-zA-Z](?![a-zA-Z]))?)?/;
 const REGISTER_COURT_RE = /(?:Registergericht|Amtsgericht|Handelsregister(?:gericht)?|Firmenbuchgericht|Handelsgericht|Landesgericht|Handelsregisteramt)\s*(?:des Kantons\s+)?:?\s*([A-ZÄÖÜ][\wäöüÄÖÜß.\- ]{2,40}?)(?=\s*(?:,|;|\n|HR[AB]|FN|Nr|Registernummer|$|unter|Handelsregister))/;
 
 const EMAIL_RE = /([\w.+-]+)\s*(?:@|\(at\)|\[at\]|\{at\}|\s+at\s+|\(ät\)|\[ät\])\s*([\w-]+(?:\s*(?:\.|\(dot\)|\[dot\]|\s+dot\s+)\s*[\w-]+)+)/i;
@@ -50,7 +50,11 @@ export function toLines(text) {
 }
 
 function cleanName(line) {
-  return line.replace(NOISE_PREFIX_RE, '').replace(/\s*[|·•]\s*.*$/, '').replace(/[,;:]\s*$/, '').trim();
+  let n = line.replace(NOISE_PREFIX_RE, '').replace(/\s*[|·•]\s*.*$/, '').replace(/[,;:]\s*$/, '').trim();
+  // "thalia.de ist ein Internetauftritt der Thalia Bücher GmbH" → "Thalia Bücher GmbH"
+  const phrase = n.match(/^.*?\b(?:ist ein(?:e)? [^.]*?\b(?:der|des|von)|betrieben (?:von|durch)(?: der| die| das)?|ein (?:Angebot|Service|Unternehmen|Produkt|Dienst) (?:der|von|des)|(?:Website|Webseite|Internetauftritt|Onlineshop|Online-Shop|Seite) (?:der|des|von)|wird (?:betrieben|verantwortet) (?:von|durch)(?: der| die| das)?|verantwortlich ist(?: die| der)?|Anbieter ist(?: die| der)?|c\/o)\s+(?=[A-ZÄÖÜ])/);
+  if (phrase) n = n.slice(phrase[0].length).trim();
+  return n;
 }
 
 function splitPeople(s) {
@@ -165,17 +169,26 @@ export function extractCompanyData(text) {
     const to = postalIdx > 0 ? postalIdx : Math.min(lines.length, 25);
     for (let i = to - 1; i >= from; i--) {
       const s = lines[i].match(STREET_RE) || (postalIdx > 0 ? lines[i].match(STREET_FALLBACK_RE) : null);
-      if (s && !/Tel|Fax|@|HRB|USt/i.test(lines[i])) { r.street = s[1].trim().replace(/[,;]$/, ''); break; }
+      if (s && !/\bTel|\bFax|@|\bHR[AB]\b|\bUSt/i.test(lines[i])) { r.street = s[1].trim().replace(/[,;]$/, ''); break; }
     }
   }
 
   // --- Company name: first line with a legal form, preferably above the address ---
   const limit = postalIdx > 0 ? postalIdx : Math.min(lines.length, 30);
   let nameIdx = -1;
-  for (let i = 0; i < Math.min(lines.length, Math.max(limit, 12)); i++) {
-    const m = lines[i].match(LEGAL_FORM_RE);
-    if (m && lines[i].length <= 120 && !/Geschäftsführer|Vertreten durch|Registergericht|Amtsgericht|\bUSt|\bVAT\b|Handelsregister|Haftungsausschluss|Hinweis/i.test(lines[i])) {
-      r.companyName = cleanName(lines[i]);
+  const NAME_EXCLUDE = /Öffnungszeiten|Filiale|Standort|Geschäftsführer|Vertreten durch|Registergericht|Amtsgericht|\bUSt|\bVAT\b|Handelsregister|Haftungsausschluss|Hinweis|gründen|Gründung|Vergleich|Ratgeber|Kosten|Vorteile|Nachteile|\?/i;
+  const scan = Math.min(lines.length, Math.max(limit, 12));
+  // pass 1: legal form at the END of the line (the normal case: "Musterfirma Software GmbH")
+  for (let pass = 0; pass < 2 && nameIdx < 0; pass++) {
+    for (let i = 0; i < scan; i++) {
+      const line = lines[i];
+      const m = line.match(LEGAL_FORM_RE);
+      if (!m || line.length > 120 || NAME_EXCLUDE.test(line)) continue;
+      const cleaned = cleanName(line);
+      const atEnd = new RegExp(m[1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s*') + '\\s*[.,)]?\\s*$', 'i').test(cleaned);
+      if (pass === 0 && !atEnd) continue;
+      if (cleaned.length < 4) continue;
+      r.companyName = cleaned;
       r.legalForm = m[1].replace(/\s+/g, ' ');
       nameIdx = i;
       break;
@@ -185,13 +198,27 @@ export function extractCompanyData(text) {
     // fall back: non-empty line 2-3 above the street/postal block (sole traders, e.g. "Max Mustermann Fotografie")
     const streetIdx = lines.findIndex((l, i) => i < postalIdx && r.street && l.includes(r.street));
     let j = (streetIdx > 0 ? streetIdx : postalIdx) - 1;
-    while (j >= 0 && /Inhaber|Geschäftsführ|Vertreten|Verantwortlich/i.test(lines[j])) j--;
+    while (j >= 0 && /Inhaber|Geschäftsführ|Vertreten|Verantwortlich|Öffnungszeiten|Filiale|Standort|Markt\b|Adresse|Anschrift|Postanschrift|Hauptsitz|Sitz\b/i.test(lines[j])) j--;
     const cand = lines[j];
     if (cand && cand.length <= 80 && !/@|Tel|www\.|http|Impressum|Angaben gemäß|Anbieter|Adresse|Anschrift|Kontakt|Postanschrift/i.test(cand)) {
       r.companyName = cleanName(cand);
     }
   }
   void nameIdx;
+  // Public bodies: "IHK für München und Oberbayern" / "Körperschaft des öffentlichen Rechts"
+  const kdoerIdx = lines.findIndex((l) => /^(Körperschaft|Anstalt|Stiftung) des öffentlichen Rechts$/i.test(l));
+  if (kdoerIdx > 0 && (!r.companyName || /des öffentlichen Rechts/i.test(r.companyName))) {
+    const prev = cleanName(lines[kdoerIdx - 1]);
+    if (prev && prev.length <= 90 && !/@|\bTel|Impressum|Angaben gemäß/i.test(prev)) {
+      r.companyName = prev;
+      r.legalForm = /^Anstalt/i.test(lines[kdoerIdx]) ? 'AöR' : /^Stiftung/i.test(lines[kdoerIdx]) ? 'Stiftung des öffentlichen Rechts' : 'KdöR';
+    }
+  }
+  if (r.companyName && r.city) {
+    const suffix = new RegExp(',\\s*' + r.city.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*$', 'i');
+    r.companyName = r.companyName.replace(suffix, '').trim();
+    if (r.companyName.endsWith(',')) r.companyName = r.companyName.slice(0, -1).trim();
+  }
 
   r.country = r.country || countryFromSignals({ vatId: r.vatId, postalCode: r.postalCode, text: joined });
 
@@ -203,41 +230,60 @@ export function extractCompanyData(text) {
   return r;
 }
 
-const IMPRESSUM_PATTERNS = [
-  { re: /impressum|anbieterkennzeichnung|anbieterkennung/i, score: 10 },
-  { re: /imprint|legal[-_ ]?notice|legal[-_ ]?information|legal$|legal\b/i, score: 8 },
-  { re: /rechtliche[-_ ]?hinweise|mentions[-_ ]?l[eé]gales|colophon|impressum-datenschutz/i, score: 6 },
-  { re: /kontakt|contact|about-?us|ueber-?uns|über-?uns/i, score: 2 },
+const SEGMENT_SCORES = [
+  [/^(impressum|imprint|anbieterkennzeichnung|anbieterkennung|legal-?notice|legalnotice|mentions-?legales|impressum-datenschutz)$/i, 20],
+  [/^(legal|rechtliches|rechtliche-?hinweise|colophon|impressum-und-datenschutz|datenschutz-impressum)$/i, 12],
+  [/^(kontakt|contact|contact-?us|kontaktieren)$/i, 5],
+  [/^(ueber-?uns|uber-?uns|about|about-?us|unternehmen)$/i, 3],
+];
+const TEXT_SCORES = [
+  [/^(impressum|imprint|legal notice|legal|anbieterkennzeichnung|mentions légales|rechtliche hinweise|impressum & datenschutz|impressum \/ datenschutz)$/i, 18],
+  [/^(impressum|imprint)\b/i, 10],
+  [/\b(impressum|imprint|legal notice)\b/i, 6],
+  [/^(kontakt|contact|contact us)$/i, 4],
 ];
 
-const COMMON_PATHS = ['/impressum', '/impressum/', '/impressum.html', '/imprint', '/imprint/', '/legal-notice', '/legal', '/de/impressum', '/pages/impressum', '/kontakt'];
+function registeredDomain(hostname) {
+  const parts = hostname.toLowerCase().replace(/^www\./, '').split('.');
+  if (parts.length <= 2) return parts.join('.');
+  const sld = parts[parts.length - 2];
+  if (/^(co|com|org|net|gov|ac)$/.test(sld) && parts[parts.length - 1].length === 2) return parts.slice(-3).join('.');
+  return parts.slice(-2).join('.');
+}
 
 /**
- * Given anchor candidates {href, text} from a page, return ranked absolute candidate URLs.
+ * Given anchor candidates {href, text} from a page, return ranked absolute candidate URLs on the same registered domain.
  */
 export function rankImpressumLinks(anchors, baseUrl, max = 3) {
   const scored = new Map();
+  let base;
+  try { base = new URL(baseUrl); } catch { return []; }
+  const baseDomain = registeredDomain(base.hostname);
   for (const { href, text } of anchors) {
-    if (!href || /^(mailto:|tel:|javascript:|#)/i.test(href)) continue;
-    let abs;
-    try { abs = new URL(href, baseUrl).toString(); } catch { continue; }
-    let base;
-    try { base = new URL(baseUrl); } catch { continue; }
-    const u = new URL(abs);
-    if (u.hostname.replace(/^www\./, '') !== base.hostname.replace(/^www\./, '')) continue;
+    if (!href || /^(mailto:|tel:|javascript:|#|data:)/i.test(href)) continue;
+    let u;
+    try { u = new URL(href, baseUrl); } catch { continue; }
+    if (!/^https?:$/.test(u.protocol)) continue;
+    if (registeredDomain(u.hostname) !== baseDomain) continue;
     u.hash = '';
-    const key = u.toString();
+    const segments = u.pathname.split('/').filter(Boolean).map((seg) => decodeURIComponent(seg).replace(/\.(html?|php|aspx?|jsp)$/i, ''));
+    const last = segments[segments.length - 1] || '';
     let score = 0;
-    for (const p of IMPRESSUM_PATTERNS) {
-      if (p.re.test(u.pathname)) score = Math.max(score, p.score);
-      if (p.re.test(text || '')) score = Math.max(score, p.score + 1);
-    }
+    for (const [re, sc] of SEGMENT_SCORES) if (re.test(last)) score = Math.max(score, sc);
+    if (!score && /impressum|imprint|anbieterkennzeichnung/i.test(u.pathname)) score = 4; // substring only
+    const t = (text || '').replace(/\s+/g, ' ').trim();
+    if (t.length <= 40) for (const [re, sc] of TEXT_SCORES) if (re.test(t)) score = Math.max(score, sc + (score ? 2 : 0));
     if (score === 0) continue;
+    if (segments.length > 3) score -= 3;
+    if (u.search) score -= 2;
+    if (u.pathname.length > 60) score -= 3;
+    const key = u.toString();
     scored.set(key, Math.max(scored.get(key) || 0, score));
   }
-  const ranked = [...scored.entries()].sort((a, b) => b[1] - a[1]).map(([u]) => u);
-  return ranked.slice(0, max);
+  return [...scored.entries()].filter(([, sc]) => sc > 0).sort((a, b) => b[1] - a[1]).map(([u]) => u).slice(0, max);
 }
+
+const COMMON_PATHS = ['/impressum', '/impressum/', '/impressum.html', '/imprint', '/legal-notice', '/de/impressum', '/pages/impressum', '/kontakt'];
 
 export function commonImpressumPaths(baseUrl) {
   try {
@@ -250,9 +296,20 @@ export function commonImpressumPaths(baseUrl) {
 export function pageToText($) {
   $('script, style, noscript, svg, nav, header, footer, iframe, form, button, [role="navigation"], [aria-hidden="true"], .cookie, #cookie, .cookie-banner, .cc-window').remove();
   // Prefer <main> or an element whose id/class mentions impressum/content
-  const candidates = ['main', '[id*="impressum" i]', '[class*="impressum" i]', 'article', '#content', '.content', '#main', 'body'];
+  // 1) Smallest block that contains a register/VAT keyword – beats store locators, footers etc.
+  const KEY = /Handelsregister|Registergericht|Firmenbuch|\bHR[AB]\b|USt-?\s?Id|Umsatzsteuer-?\s?Id|\bUID\b|Angaben gemäß|Informationspflicht/i;
   let best = null;
+  let bestLen = Infinity;
+  $('main, article, section, div, td, address').each((_, el) => {
+    const $el = $(el);
+    const t = $el.text().replace(/\s+/g, ' ').trim();
+    if (t.length < 250 || t.length > 8000 || !KEY.test(t)) return;
+    if (!/\b\d{4,5}\s+[A-ZÄÖÜ][a-zäöüß]/.test(t)) return; // must also contain a postal address
+    if (t.length < bestLen) { best = $el; bestLen = t.length; }
+  });
+  const candidates = ['main', '[id*="impressum" i]', '[class*="impressum" i]', 'article', '#content', '.content', '#main', 'body'];
   for (const sel of candidates) {
+    if (best) break;
     const el = $(sel).first();
     if (el.length && el.text().replace(/\s+/g, ' ').trim().length > 80) { best = el; break; }
   }

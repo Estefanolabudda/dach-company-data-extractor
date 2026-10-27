@@ -1,0 +1,65 @@
+{
+  "title": "DACH Company Data Extractor input",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "startUrls": {
+      "title": "Website URLs",
+      "type": "array",
+      "description": "Homepages (or any page) of the companies you want to look up. One record per domain is returned.",
+      "editor": "requestListSources",
+      "prefill": [
+        {
+          "url": "https://www.sevdesk.de"
+        },
+        {
+          "url": "https://www.heise.de"
+        }
+      ]
+    },
+    "validateVatId": {
+      "title": "Validate VAT ID via EU VIES",
+      "type": "boolean",
+      "description": "Checks every found DE/AT VAT ID against the official EU VIES service and adds the registered name/address when the member state returns it. Swiss UIDs are not in VIES.",
+      "default": true
+    },
+    "maxCandidatesPerSite": {
+      "title": "Max legal-notice pages per site",
+      "type": "integer",
+      "description": "How many candidate pages (Impressum, Imprint, Legal notice, Kontakt) to fetch per site. Higher = more robust, slightly more usage.",
+      "default": 3,
+      "minimum": 1,
+      "maximum": 6
+    },
+    "tryCommonPaths": {
+      "title": "Try common paths when no link is found",
+      "type": "boolean",
+      "description": "If the homepage has no recognizable Impressum link, probe /impressum, /imprint, /legal-notice, /kontakt.",
+      "default": true
+    },
+    "useBrowserFallback": {
+      "title": "Browser fallback for JavaScript-rendered sites",
+      "type": "boolean",
+      "description": "If a legal page comes back empty over plain HTTP (single-page apps, consent walls), re-fetch it with a headless browser. Costs more compute per page but rescues most large e-commerce sites.",
+      "default": true
+    },
+    "maxConcurrency": {
+      "title": "Max concurrency",
+      "type": "integer",
+      "description": "Parallel requests.",
+      "default": 10,
+      "minimum": 1,
+      "maximum": 50,
+      "sectionCaption": "Advanced"
+    },
+    "proxyConfiguration": {
+      "title": "Proxy configuration",
+      "type": "object",
+      "description": "Optional. Most company sites do not require a proxy.",
+      "editor": "proxy"
+    }
+  },
+  "required": [
+    "startUrls"
+  ]
+}
