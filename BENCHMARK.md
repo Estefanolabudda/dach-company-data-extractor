@@ -1,18 +1,18 @@
 # Live benchmark – 2026-10-27
 
-20 sites, 88s wall clock, 17 with confidence ≥ 0.75, 5 via browser fallback.
+20 sites, 82s wall clock, 18 with confidence ≥ 0.75, 5 via browser fallback.
 
 | Field | Found |
 |---|---|
-| companyName | 17/20 |
-| street | 17/20 |
+| companyName | 18/20 |
+| street | 19/20 |
 | postalCode | 18/20 |
 | city | 18/20 |
 | country | 19/20 |
 | registerNumber | 11/20 |
 | vatId | 13/20 |
-| email | 16/20 |
-| phone | 10/20 |
+| email | 17/20 |
+| phone | 11/20 |
 | representatives | 13/20 |
 
 VIES: 13 checked, 13 valid.
@@ -31,7 +31,7 @@ VIES: 13 checked, 13 valid.
 | billomat.com | aifinyo AG | Berlin | HRB 246794B | DE282616212 | 0.75 | http |
 | bitpanda.com |  |  |   |  | 0 | browser |
 | hornbach.de | HORNBACH Hamburg - Eidelstedt | Hamburg |   |  | 0.75 | browser |
-| sipgate.de |  | Bonn | HRB 39841 | DE219349391 | 0.25 | http |
+| sipgate.de | sipgate GmbH | Düsseldorf | HRB 39841 | DE219349391 | 1 | http |
 | hetzner.com | Hetzner Online GmbH | Gunzenhausen | HRB 6089 | DE812871812 | 1 | http |
 | fielmann.de | Fielmann AG & Co. Service KG | Rathenow | HRB 56098 | DE283692902 | 1 | http |
 | galaxus.ch | Digitec Galaxus AG | Zurich |   |  | 0.75 | http |
