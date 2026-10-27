@@ -1,7 +1,7 @@
 {
   "actorSpecification": 1,
   "name": "dach-company-data-extractor",
-  "title": "DACH Company Data Extractor (Impressum → structured data + VIES)",
+  "title": "DACH Company Data Extractor – Impressum + VIES",
   "description": "Turn any German, Austrian or Swiss website into a structured company record: legal name, legal form, address, register court/number, VAT ID (validated via EU VIES), representatives, contact data. Input: list of URLs.",
   "version": "0.1",
   "buildTag": "latest",
