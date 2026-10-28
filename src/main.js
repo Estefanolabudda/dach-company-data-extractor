@@ -40,10 +40,14 @@ const state = new Map(sites.map((u) => [siteKey(u), {
 }]));
 
 // On the Apify platform default to Apify Proxy (datacenter) so that sites blocking cloud IPs still answer; locally use a proxy only when given.
-const proxyInput = proxyConfiguration ?? (Actor.isAtHome() ? { useApifyProxy: true } : undefined);
+// Exit via Germany by default: many sites geo-route US visitors to US pages that lack the European legal entity.
+const proxyInput = proxyConfiguration ?? (Actor.isAtHome() ? { useApifyProxy: true, apifyProxyCountry: 'DE' } : undefined);
 let proxyConf;
 try { proxyConf = proxyInput ? await Actor.createProxyConfiguration(proxyInput) : undefined; }
-catch (e) { log.warning(`Proxy configuration not available (${e.message}); continuing without proxy.`); proxyConf = undefined; }
+catch (e) {
+  log.warning(`Proxy configuration not available (${e.message}); retrying without country.`);
+  try { proxyConf = Actor.isAtHome() ? await Actor.createProxyConfiguration({ useApifyProxy: true }) : undefined; } catch { proxyConf = undefined; }
+}
 
 const consider = (s, record, sourceUrl, via) => {
   if (!s.best || record.confidence > s.best.confidence
