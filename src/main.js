@@ -40,14 +40,13 @@ const state = new Map(sites.map((u) => [siteKey(u), {
 }]));
 
 // On the Apify platform default to Apify Proxy (datacenter) so that sites blocking cloud IPs still answer; locally use a proxy only when given.
-// Exit via Germany by default: many sites geo-route US visitors to US pages that lack the European legal entity.
-const proxyInput = proxyConfiguration ?? (Actor.isAtHome() ? { useApifyProxy: true, apifyProxyCountry: 'DE' } : undefined);
+// On the platform default to Apify Proxy (datacenter, no country pinning – country-targeted datacenter exits need a paid group).
+const proxyInput = proxyConfiguration ?? (Actor.isAtHome() ? { useApifyProxy: true } : undefined);
 let proxyConf;
 try { proxyConf = proxyInput ? await Actor.createProxyConfiguration(proxyInput) : undefined; }
-catch (e) {
-  log.warning(`Proxy configuration not available (${e.message}); retrying without country.`);
-  try { proxyConf = Actor.isAtHome() ? await Actor.createProxyConfiguration({ useApifyProxy: true }) : undefined; } catch { proxyConf = undefined; }
-}
+catch (e) { log.warning(`Proxy configuration not available (${e.message}); continuing without proxy.`); proxyConf = undefined; }
+// Ask for European language versions; helps sites that localise by Accept-Language rather than by IP.
+const ACCEPT_LANGUAGE = 'de-DE,de;q=0.9,fr;q=0.8,nl;q=0.7,en-GB;q=0.6,en;q=0.5';
 
 const consider = (s, record, sourceUrl, via) => {
   if (!s.best || record.confidence > s.best.confidence
@@ -110,6 +109,7 @@ const cheerioCrawler = new CheerioCrawler({
   persistCookiesPerSession: true,
   ignoreHttpErrorStatusCodes: [404, 410],
   additionalMimeTypes: ['application/xhtml+xml'],
+  preNavigationHooks: [(_ctx, gotOptions) => { gotOptions.headers = { ...(gotOptions.headers || {}), 'accept-language': ACCEPT_LANGUAGE }; }],
   async requestHandler({ request, $, response, crawler: c }) {
     const key = request.userData.key;
     const s = state.get(key);
@@ -154,7 +154,8 @@ if (browserTargets.length) {
     maxRequestRetries: 1,
     requestHandlerTimeoutSecs: 60,
     navigationTimeoutSecs: 40,
-    launchContext: { launchOptions: { ...launchOptions, args: ['--disable-gpu', '--no-sandbox'] } },
+    launchContext: { launchOptions: { ...launchOptions, args: ['--disable-gpu', '--no-sandbox', `--lang=de-DE`] } },
+    preNavigationHooks: [async ({ page }) => { await page.setExtraHTTPHeaders({ 'accept-language': ACCEPT_LANGUAGE }); }],
     async requestHandler({ request, page, crawler: c }) {
       const key = request.userData.key;
       const s = state.get(key);

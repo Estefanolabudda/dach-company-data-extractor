@@ -55,15 +55,13 @@
     "proxyConfiguration": {
       "title": "Proxy configuration",
       "type": "object",
-      "description": "Apify Proxy exiting via Germany is used by default, so sites answer with their European pages (US exits often get US legal pages). Switch to residential proxies for sites with strong bot protection.",
+      "description": "Apify Proxy (datacenter) is used by default so that sites blocking cloud IPs still answer. Switch to residential proxies (optionally with a country) for sites with strong bot protection or strict geo-routing.",
       "editor": "proxy",
       "default": {
-        "useApifyProxy": true,
-        "apifyProxyCountry": "DE"
+        "useApifyProxy": true
       },
       "prefill": {
-        "useApifyProxy": true,
-        "apifyProxyCountry": "DE"
+        "useApifyProxy": true
       }
     }
   },
