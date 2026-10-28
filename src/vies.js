@@ -17,9 +17,13 @@ export async function checkVies(vatId, { fetchImpl = fetch, timeoutMs = 10000 } 
     });
     if (!res.ok) return { checked: false, valid: null, reason: `http_${res.status}` };
     const data = await res.json();
+    if (data.actionSucceed === false || (Array.isArray(data.errorWrappers) && data.errorWrappers.length)) {
+      return { checked: false, valid: null, reason: data.errorWrappers?.[0]?.error || 'service_error' };
+    }
     if (data.userError && data.userError !== 'VALID' && data.userError !== 'INVALID') {
       return { checked: false, valid: null, reason: data.userError };
     }
+    if (typeof data.valid !== 'boolean') return { checked: false, valid: null, reason: 'unexpected_response' };
     return {
       checked: true, valid: data.valid === true,
       name: data.name && data.name !== '---' ? data.name.trim() : null,

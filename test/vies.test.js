@@ -16,3 +16,8 @@ test('checkVies handles service errors', async () => {
   const r = await checkVies('DE123456789', { fetchImpl });
   assert.equal(r.checked, false); assert.equal(r.reason, 'MS_UNAVAILABLE');
 });
+test('checkVies treats member-state outage as not checked', async () => {
+  const fetchImpl = async () => ({ ok: true, json: async () => ({ actionSucceed: false, errorWrappers: [{ error: 'MS_UNAVAILABLE' }] }) });
+  const r = await checkVies('DE291779897', { fetchImpl });
+  assert.equal(r.checked, false); assert.equal(r.valid, null); assert.equal(r.reason, 'MS_UNAVAILABLE');
+});
