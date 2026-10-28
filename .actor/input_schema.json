@@ -55,8 +55,14 @@
     "proxyConfiguration": {
       "title": "Proxy configuration",
       "type": "object",
-      "description": "Optional. Most company sites do not require a proxy.",
-      "editor": "proxy"
+      "description": "Apify Proxy (datacenter) is used by default so that sites blocking cloud IPs still answer. Switch to residential proxies for sites with strong bot protection, or disable to use no proxy.",
+      "editor": "proxy",
+      "default": {
+        "useApifyProxy": true
+      },
+      "prefill": {
+        "useApifyProxy": true
+      }
     }
   },
   "required": [
