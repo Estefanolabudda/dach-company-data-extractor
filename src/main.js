@@ -39,7 +39,11 @@ const state = new Map(sites.map((u) => [siteKey(u), {
   inputUrl: u, best: null, homeRecord: null, candidates: [], pending: 0, commonTried: false, browserQueue: [], errors: [],
 }]));
 
-const proxyConf = proxyConfiguration ? await Actor.createProxyConfiguration(proxyConfiguration) : undefined;
+// On the Apify platform default to Apify Proxy (datacenter) so that sites blocking cloud IPs still answer; locally use a proxy only when given.
+const proxyInput = proxyConfiguration ?? (Actor.isAtHome() ? { useApifyProxy: true } : undefined);
+let proxyConf;
+try { proxyConf = proxyInput ? await Actor.createProxyConfiguration(proxyInput) : undefined; }
+catch (e) { log.warning(`Proxy configuration not available (${e.message}); continuing without proxy.`); proxyConf = undefined; }
 
 const consider = (s, record, sourceUrl, via) => {
   if (!s.best || record.confidence > s.best.confidence
